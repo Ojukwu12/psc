@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+*.log
+test/tmp-*
+uploads/
+data/app.json
+.DS_Store
