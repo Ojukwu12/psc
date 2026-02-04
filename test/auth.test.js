@@ -80,9 +80,17 @@ test("Upload requires title", async () => {
 });
 
 test("Admin upload with title", async () => {
+  // Re-authenticate to ensure we have a valid token
+  let loginRes = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "admin-password-123" });
+  
+  assert.equal(loginRes.status, 200);
+  const freshToken = loginRes.body.token;
+
   const res = await request(app)
     .post("/api/admin/past-questions")
-    .set("authorization", `Bearer ${adminToken}`)
+    .set("authorization", `Bearer ${freshToken}`)
     .field("title", "Biology Final Exam 2024")
     .field("subject", "Biology")
     .field("year", "2024")

@@ -9,6 +9,9 @@ export async function connectDb() {
   }
 
   try {
+    mongoose.set('bufferCommands', false);
+    mongoose.set('bufferTimeoutMS', 1000);
+
     await mongoose.connect(env.mongodbUri, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 5000,
@@ -27,7 +30,12 @@ export async function connectDb() {
     });
   } catch (error) {
     console.error('Failed to connect to MongoDB:', error);
-    throw error;
+    if (!env.allowDbFallback) {
+      throw error;
+    }
+
+    console.warn('Continuing without MongoDB (fallback mode enabled).');
+    isConnected = false;
   }
 }
 

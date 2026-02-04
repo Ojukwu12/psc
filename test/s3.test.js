@@ -31,6 +31,17 @@ test.after(async () => {
   } catch {}
 });
 
+let adminToken;
+
+test("Login for S3 test", async () => {
+  const res = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "test-key" });
+
+  assert.equal(res.status, 200);
+  adminToken = res.body.token;
+});
+
 test("S3 Upload and Download", async () => {
   if (!process.env.S3_BUCKET) {
     console.log("⏭️  Skipping S3 test - S3_BUCKET not configured in .env");
@@ -41,7 +52,7 @@ test("S3 Upload and Download", async () => {
   
   const uploadRes = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Biology S3 Test 2024")
     .field("subject", "Biology")
     .field("className", "SS3")

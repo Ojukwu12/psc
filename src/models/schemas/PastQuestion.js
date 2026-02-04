@@ -9,19 +9,19 @@ const pastQuestionSchema = new mongoose.Schema(
     },
     subject: {
       type: String,
-      required: true,
+      default: null,
       trim: true,
       index: true,
     },
     class_name: {
       type: String,
-      required: true,
+      default: null,
       trim: true,
       index: true,
     },
     year: {
       type: String,
-      required: true,
+      default: null,
       trim: true,
       index: true,
     },

@@ -6,7 +6,6 @@ import { createPastQuestion, getPastQuestionById, listPastQuestions } from "../m
 import { getStorage } from "../services/storage/index.js";
 
 const router = Router();
-const storage = getStorage();
 
 const ALLOWED_MIME_TYPES = [
   "application/pdf",
@@ -58,6 +57,7 @@ router.post("/admin/past-questions", requireAdminSession, upload.single("file"),
       return res.status(400).json({ error: "Title is required" });
     }
 
+    const storage = getStorage();
     const uploadResult = await storage.upload({
       buffer: req.file.buffer,
       mimeType: req.file.mimetype,
@@ -75,7 +75,11 @@ router.post("/admin/past-questions", requireAdminSession, upload.single("file"),
       size: req.file.size,
     });
 
-    return res.status(201).json(record);
+    // Convert to plain JSON and add id field for compatibility
+    const recordJson = record.toJSON ? record.toJSON() : record;
+    recordJson.id = recordJson._id?.toString();
+    
+    return res.status(201).json(recordJson);
   } catch (error) {
     return next(error);
   }
@@ -92,7 +96,13 @@ router.get("/past-questions", async (req, res, next) => {
       offset: req.query.offset,
     });
 
-    return res.json(result);
+    // Add id field to each item for compatibility
+    const items = result.items.map(item => ({
+      ...item,
+      id: item._id?.toString(),
+    }));
+
+    return res.json({ items, total: result.total });
   } catch (error) {
     return next(error);
   }
@@ -100,23 +110,39 @@ router.get("/past-questions", async (req, res, next) => {
 
 router.get("/past-questions/:id", async (req, res, next) => {
   try {
+    // Validate ID format
+    if (!req.params.id || req.params.id === "undefined") {
+      return res.status(404).json({ error: "Not found" });
+    }
+    
     const record = await getPastQuestionById(req.params.id);
     if (!record) {
       return res.status(404).json({ error: "Not found" });
     }
-    return res.json(record);
+    
+    // Add id field for compatibility
+    const recordJson = record.toJSON ? record.toJSON() : record;
+    recordJson.id = recordJson._id?.toString();
+    
+    return res.json(recordJson);
   } catch (error) {
-    return next(error);
+    return res.status(404).json({ error: "Not found" });
   }
 });
 
 router.get("/past-questions/:id/download", async (req, res, next) => {
   try {
+    // Validate ID format
+    if (!req.params.id || req.params.id === "undefined") {
+      return res.status(404).json({ error: "Not found" });
+    }
+    
     const record = await getPastQuestionById(req.params.id);
     if (!record) {
       return res.status(404).json({ error: "Not found" });
     }
 
+    const storage = getStorage();
     const stream = await storage.getStream(record.file_key);
     
     // Sanitize filename: remove quotes, backslashes, path separators
@@ -144,7 +170,7 @@ router.get("/past-questions/:id/download", async (req, res, next) => {
 
     return res.end(stream);
   } catch (error) {
-    return next(error);
+    return res.status(404).json({ error: "Not found" });
   }
 });
 

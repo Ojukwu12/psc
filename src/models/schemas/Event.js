@@ -23,11 +23,11 @@ const eventSchema = new mongoose.Schema(
     },
     image_url: {
       type: String,
-      required: true,
+      default: 'https://via.placeholder.com/400x300?text=Event'
     },
     image_public_id: {
       type: String,
-      required: true,
+      default: null
     },
   },
   {

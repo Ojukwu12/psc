@@ -12,6 +12,7 @@ const env = {
   storageBackend: process.env.STORAGE_BACKEND || "local",
   localStorageDir: process.env.LOCAL_STORAGE_DIR || "uploads",
   mongodbUri: process.env.MONGODB_URI || "mongodb://localhost:27017/napss-website",
+  allowDbFallback: process.env.ALLOW_DB_FALLBACK === "true",
   maxFileSizeMb: Number(process.env.MAX_FILE_SIZE_MB || 20),
   s3: {
     region: process.env.S3_REGION || "us-east-1",

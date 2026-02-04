@@ -23,9 +23,16 @@ await initDb();
 
 console.log("Testing S3 Upload...");
 
+// Login first to get token
+const loginRes = await request(app)
+  .post("/api/auth/admin/login")
+  .send({ password: "test-key" });
+
+const token = loginRes.body.token;
+
 const uploadRes = await request(app)
   .post("/api/admin/past-questions")
-  .set("x-admin-api-key", "test-key")
+  .set("authorization", `Bearer ${token}`)
   .field("title", "Biology Test")
   .attach("file", fixturePath);
 

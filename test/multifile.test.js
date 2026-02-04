@@ -39,10 +39,21 @@ test.after(async () => {
   } catch {}
 });
 
+let adminToken;
+
+test("Login for test", async () => {
+  const res = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "test-key-multi" });
+
+  assert.equal(res.status, 200);
+  adminToken = res.body.token;
+});
+
 test("Upload PDF file", async () => {
   const res = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key-multi")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Math PDF 2024")
     .attach("file", pdfPath);
 
@@ -53,7 +64,7 @@ test("Upload PDF file", async () => {
 test("Upload JPG file", async () => {
   const res = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key-multi")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Physics Diagram")
     .attach("file", jpgPath);
 
@@ -65,7 +76,7 @@ test("Upload JPG file", async () => {
 test("Upload DOCX file", async () => {
   const res = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key-multi")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Chemistry Notes")
     .attach("file", docxPath);
 

@@ -30,6 +30,19 @@ test.after(async () => {
   } catch {}
 });
 
+let adminToken;
+
+test("Login to get admin token", async () => {
+  const res = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "test-key" });
+
+  assert.equal(res.status, 200);
+  assert.ok(res.body.token);
+  adminToken = res.body.token;
+  console.log("✔ Admin token obtained");
+});
+
 test("GET /health", async () => {
   const res = await request(app).get("/health");
   assert.equal(res.status, 200);
@@ -40,7 +53,7 @@ test("GET /health", async () => {
 test("POST /api/admin/past-questions - upload PDF", async () => {
   const res = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Math Past Questions 2022")
     .field("subject", "Mathematics")
     .field("className", "SS3")
@@ -61,7 +74,7 @@ test("POST /api/admin/past-questions - reject non-PDF", async () => {
   try {
     const res = await request(app)
       .post("/api/admin/past-questions")
-      .set("x-admin-api-key", "test-key")
+      .set("authorization", `Bearer ${adminToken}`)
       .attach("file", txtPath);
 
     assert.equal(res.status, 400);
@@ -81,7 +94,7 @@ test("POST /api/admin/past-questions - reject bad API key", async () => {
   try {
     const res = await request(app)
       .post("/api/admin/past-questions")
-      .set("x-admin-api-key", "wrong-key")
+      .set("authorization", "Bearer wrong-token")
       .attach("file", fixturePath);
 
     assert.equal(res.status, 401);

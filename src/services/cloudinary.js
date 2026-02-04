@@ -18,10 +18,11 @@ export const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     // Accept only image files
-    if (file.mimetype.startsWith('image/')) {
+    const isImage = file.mimetype.startsWith('image/');
+    if (isImage) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed'), false);
+      cb(null, false); // Return false silently instead of throwing error
     }
   }
 });

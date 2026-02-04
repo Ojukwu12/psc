@@ -30,13 +30,24 @@ test.after(async () => {
   } catch {}
 });
 
+let adminToken;
+
+test("Login first", async () => {
+  const res = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "test-key-final" });
+
+  assert.equal(res.status, 200);
+  adminToken = res.body.token;
+});
+
 test("Complete Upload & Download Flow", async () => {
   console.log("\n📤 UPLOAD TEST");
   console.log("=" .repeat(50));
   
   const uploadRes = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key-final")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Physics Past Questions 2023")
     .field("subject", "Physics")
     .field("className", "SS3")

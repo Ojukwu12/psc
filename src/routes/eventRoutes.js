@@ -55,21 +55,30 @@ router.post('/events', requireAdmin, upload.single('image'), async (req, res, ne
       });
     }
 
-    if (!req.file) {
-      return res.status(400).json({ error: 'Image is required' });
+    let imageUrl = null;
+    let imagePublicId = null;
+
+    // Upload image to Cloudinary if provided
+    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+      try {
+        const uploadResult = await uploadImage(req.file.buffer, 'events');
+        imageUrl = uploadResult.url;
+        imagePublicId = uploadResult.publicId;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        // Continue without image if Cloudinary fails
+        console.warn('Creating event without image due to Cloudinary error');
+      }
     }
 
-    // Upload image to Cloudinary
-    const uploadResult = await uploadImage(req.file.buffer, 'events');
-
-    // Create event record
+    // Create event record (image is optional now)
     const event = await createEvent({
       title,
       description,
       date,
       location,
-      imageUrl: uploadResult.url,
-      imagePublicId: uploadResult.publicId
+      imageUrl: imageUrl || 'https://via.placeholder.com/400x300?text=' + encodeURIComponent(title),
+      imagePublicId: imagePublicId || null
     });
 
     res.status(201).json(event);
@@ -100,20 +109,25 @@ router.put('/events/:id', requireAdmin, upload.single('image'), async (req, res,
     };
 
     // If new image is uploaded, replace the old one
-    if (req.file) {
-      // Delete old image from Cloudinary
-      if (existingEvent.image_public_id) {
-        try {
-          await deleteImage(existingEvent.image_public_id);
-        } catch (error) {
-          console.error('Failed to delete old image:', error);
+    if (req.file && req.file.buffer && req.file.buffer.length > 0) {
+      try {
+        // Delete old image from Cloudinary
+        if (existingEvent.image_public_id) {
+          try {
+            await deleteImage(existingEvent.image_public_id);
+          } catch (error) {
+            console.error('Failed to delete old image:', error);
+          }
         }
-      }
 
-      // Upload new image
-      const uploadResult = await uploadImage(req.file.buffer, 'events');
-      updateData.image_url = uploadResult.url;
-      updateData.image_public_id = uploadResult.publicId;
+        // Upload new image
+        const uploadResult = await uploadImage(req.file.buffer, 'events');
+        updateData.image_url = uploadResult.url;
+        updateData.image_public_id = uploadResult.publicId;
+      } catch (uploadError) {
+        console.error('Cloudinary upload error:', uploadError);
+        // Keep existing image if upload fails
+      }
     }
 
     // Update event

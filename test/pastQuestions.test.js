@@ -30,10 +30,21 @@ test.after(async () => {
   } catch {}
 });
 
+let adminToken;
+
+test("Login for test", async () => {
+  const res = await request(app)
+    .post("/api/auth/admin/login")
+    .send({ password: "test-key" });
+
+  assert.equal(res.status, 200);
+  adminToken = res.body.token;
+});
+
 test("upload and download past question", async () => {
   const uploadRes = await request(app)
     .post("/api/admin/past-questions")
-    .set("x-admin-api-key", "test-key")
+    .set("authorization", `Bearer ${adminToken}`)
     .field("title", "Math 2022")
     .attach("file", fixturePath);
 
