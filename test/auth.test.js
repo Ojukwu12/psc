@@ -4,10 +4,15 @@ import request from "supertest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+
+// Load .env file BEFORE anything else
+const testDir = path.dirname(fileURLToPath(import.meta.url));
+const envPath = path.join(testDir, '../.env');
+dotenv.config({ path: envPath });
 
 process.env.STORAGE_BACKEND = "local";
 process.env.LOCAL_STORAGE_DIR = "test/tmp-uploads-auth";
-process.env.DB_PATH = "test/tmp-db-auth.json";
 process.env.ADMIN_API_KEY = "admin-password-123";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

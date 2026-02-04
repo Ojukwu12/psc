@@ -10,8 +10,8 @@ export async function connectDb() {
 
   try {
     await mongoose.connect(env.mongodbUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 5000,
     });
     
     isConnected = true;
@@ -40,5 +40,9 @@ export async function disconnectDb() {
   isConnected = false;
   console.log('Disconnected from MongoDB');
 }
+
+// Export aliases for test compatibility
+export const initDb = connectDb;
+export const closeDb = disconnectDb;
 
 export { mongoose };

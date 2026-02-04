@@ -2,12 +2,15 @@ import request from "supertest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+
+// Load .env file
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env') });
 
 // Debug script for S3 upload
 // Configure S3 credentials in .env file before running
 
 process.env.STORAGE_BACKEND = "s3";
-process.env.DB_PATH = "test/tmp-db-s3.json";
 process.env.ADMIN_API_KEY = "test-key";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

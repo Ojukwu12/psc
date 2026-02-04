@@ -4,10 +4,13 @@ import request from "supertest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+
+// Load .env file
+dotenv.config({ path: path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../.env') });
 
 process.env.STORAGE_BACKEND = "local";
-process.env.LOCAL_STORAGE_DIR = "test/tmp-uploads";
-process.env.DB_PATH = "test/tmp-db.json";
+process.env.LOCAL_STORAGE_DIR = "test/tmp-uploads-pq";
 process.env.ADMIN_API_KEY = "test-key";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
