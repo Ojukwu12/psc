@@ -7,7 +7,7 @@ const env = {
   adminApiKey: process.env.ADMIN_API_KEY || "change-me",
   storageBackend: process.env.STORAGE_BACKEND || "local",
   localStorageDir: process.env.LOCAL_STORAGE_DIR || "uploads",
-  dbPath: process.env.DB_PATH || "data/app.json",
+  mongodbUri: process.env.MONGODB_URI || "mongodb://localhost:27017/napss-website",
   maxFileSizeMb: Number(process.env.MAX_FILE_SIZE_MB || 20),
   s3: {
     region: process.env.S3_REGION || "us-east-1",
@@ -16,6 +16,11 @@ const env = {
     secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
     endpoint: process.env.S3_ENDPOINT || "",
     forcePathStyle: process.env.S3_FORCE_PATH_STYLE === "true",
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME || "",
+    apiKey: process.env.CLOUDINARY_API_KEY || "",
+    apiSecret: process.env.CLOUDINARY_API_SECRET || "",
   },
 };
 

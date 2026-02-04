@@ -1,37 +1,44 @@
-import fs from "fs/promises";
-import path from "path";
-import { Low } from "lowdb";
-import { JSONFile } from "lowdb/node";
-import env from "./env.js";
+import mongoose from 'mongoose';
+import env from './env.js';
 
-let db;
+let isConnected = false;
 
-export async function initDb() {
-  if (db) {
-    return db;
+export async function connectDb() {
+  if (isConnected) {
+    return;
   }
 
-  const dir = path.dirname(env.dbPath);
-  if (dir && dir !== ".") {
-    await fs.mkdir(dir, { recursive: true });
+  try {
+    await mongoose.connect(env.mongodbUri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    
+    isConnected = true;
+    console.log('✅ Connected to MongoDB');
+    
+    mongoose.connection.on('error', (err) => {
+      console.error('MongoDB connection error:', err);
+    });
+
+    mongoose.connection.on('disconnected', () => {
+      console.log('MongoDB disconnected');
+      isConnected = false;
+    });
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error);
+    throw error;
   }
-
-  const adapter = new JSONFile(env.dbPath);
-  db = new Low(adapter, { past_questions: [] });
-  await db.read();
-  db.data ||= { past_questions: [] };
-  await db.write();
-
-  return db;
 }
 
-export async function getDb() {
-  if (!db) {
-    await initDb();
+export async function disconnectDb() {
+  if (!isConnected) {
+    return;
   }
-  return db;
+  
+  await mongoose.connection.close();
+  isConnected = false;
+  console.log('Disconnected from MongoDB');
 }
 
-export async function closeDb() {
-  db = null;
-}
+export { mongoose };

@@ -4,6 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import pastQuestionsRoutes from "./routes/pastQuestionsRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import eventRoutes from "./routes/eventRoutes.js";
 import { notFoundHandler, errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
@@ -19,6 +20,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", adminRoutes);
 app.use("/api", pastQuestionsRoutes);
+app.use("/api", eventRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

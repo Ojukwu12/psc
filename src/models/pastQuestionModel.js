@@ -1,24 +1,7 @@
-import { getDb } from "../config/db.js";
-
-function matchesText(value, query) {
-  if (!value) {
-    return false;
-  }
-  return String(value).toLowerCase().includes(query);
-}
-
-function nextId(items) {
-  if (!items.length) {
-    return 1;
-  }
-  return Math.max(...items.map((item) => item.id)) + 1;
-}
+import PastQuestion from './schemas/PastQuestion.js';
 
 export async function createPastQuestion(data) {
-  const db = await getDb();
-  const createdAt = new Date().toISOString();
-  const record = {
-    id: nextId(db.data.past_questions),
+  const pastQuestion = new PastQuestion({
     title: data.title,
     subject: data.subject,
     class_name: data.className,
@@ -27,56 +10,48 @@ export async function createPastQuestion(data) {
     file_name: data.fileName,
     mime_type: data.mimeType,
     size: data.size,
-    created_at: createdAt,
-  };
+  });
 
-  db.data.past_questions.push(record);
-  await db.write();
-  return record;
+  await pastQuestion.save();
+  return pastQuestion;
 }
 
 export async function getPastQuestionById(id) {
-  const db = await getDb();
-  const numericId = Number(id);
-  return db.data.past_questions.find((item) => item.id === numericId);
+  return await PastQuestion.findById(id);
 }
 
 export async function listPastQuestions(filters) {
-  const db = await getDb();
-  const query = filters.q ? String(filters.q).toLowerCase() : "";
-  const year = filters.year ? String(filters.year) : null;
-  const subject = filters.subject ? String(filters.subject).toLowerCase() : null;
-  const className = filters.className ? String(filters.className).toLowerCase() : null;
+  const query = {};
 
-  let items = db.data.past_questions;
-
-  if (query) {
-    items = items.filter(
-      (item) =>
-        matchesText(item.title, query) ||
-        matchesText(item.subject, query) ||
-        matchesText(item.class_name, query) ||
-        matchesText(item.year, query)
-    );
+  // Text search
+  if (filters.q) {
+    query.$text = { $search: filters.q };
   }
 
-  if (year) {
-    items = items.filter((item) => String(item.year) === year);
+  // Exact match filters
+  if (filters.year) {
+    query.year = String(filters.year);
   }
 
-  if (subject) {
-    items = items.filter((item) => String(item.subject || "").toLowerCase() === subject);
+  if (filters.subject) {
+    query.subject = new RegExp(filters.subject, 'i');
   }
 
-  if (className) {
-    items = items.filter((item) => String(item.class_name || "").toLowerCase() === className);
+  if (filters.className) {
+    query.class_name = new RegExp(filters.className, 'i');
   }
-
-  items = [...items].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
   const limit = Number(filters.limit || 20);
   const offset = Number(filters.offset || 0);
-  const paged = items.slice(offset, offset + limit);
 
-  return { items: paged, total: items.length };
+  const [items, total] = await Promise.all([
+    PastQuestion.find(query)
+      .sort({ created_at: -1 })
+      .skip(offset)
+      .limit(limit)
+      .lean(),
+    PastQuestion.countDocuments(query),
+  ]);
+
+  return { items, total };
 }
